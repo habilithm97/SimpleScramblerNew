@@ -17,12 +17,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            SimpleScramblerNewTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        setContent { // Compose UI
+            SimpleScramblerNewTheme { // 테마
+                Scaffold( // 기본 레이아웃
+                    modifier = Modifier.fillMaxSize() // 전체 화면
+                ) { innerPadding -> // 기본 패딩
                     Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                        name = "Android", // 전달 값
+                        modifier = Modifier.padding(innerPadding) // 패딩
                     )
                 }
             }
@@ -30,14 +32,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// 화면 함수
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
-        text = "Hello $name!",
-        modifier = modifier
+        text = "Hello $name!", // 텍스트 출력
+        modifier = modifier // 패딩 적용
     )
 }
 
+// 미리보기
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
