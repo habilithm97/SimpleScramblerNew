@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -70,6 +75,48 @@ fun PagerScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun ScrambleScreen() {
+    // Compose 상태로 관리되는 스크램블 문자열 (초기 안내 문구 포함)
+    var scramble by remember { mutableStateOf("TAP TO GENERATE") }
+
+    val faces = listOf("U", "R", "F", "B", "L", "D")
+    val rotations = listOf("", "'", "2")
+
+    // 면이 속한 회전 축 반환
+    fun getAxis(face: String): String {
+        return when (face) {
+            "U", "D" -> "UD"
+            "L", "R" -> "LR"
+            "F", "B" -> "FB"
+            else -> ""
+        }
+    }
+
+    fun createScramble(): String {
+        val builder = StringBuilder()
+        var lastFace = "" // 직전 면 저장 (연속 동일 면 방지 ex. U U2)
+        var secondLastFace = "" // 두 번째 직전 면 저장 (같은 축 3연속 방지 ex. R L R)
+
+        repeat(20) {
+            var face: String
+
+            do {
+                face = faces.random()
+            } while (
+                face == lastFace || // 직전 면과 동일하거나
+                // 같은 축이 3연속이면 다시
+                (face == secondLastFace && getAxis(face) == getAxis(lastFace))
+            )
+            val rotation = rotations.random()
+
+            if (builder.isNotEmpty()) builder.append(" ") // 첫 수가 아니면 공백 추가
+            builder.append(face).append(rotation)
+
+            secondLastFace = lastFace
+            lastFace = face
+        }
+        return builder.toString()
+    }
+
     Column( // 세로로 배치 (LinearLayout)
         modifier = Modifier
             .fillMaxSize()
@@ -91,11 +138,14 @@ fun ScrambleScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f) // 남은 공간 전부 사용
-                .padding(16.dp),
+                .padding(16.dp)
+                .clickable {
+                    scramble = createScramble() // 화면 터치 시 새로 생성
+                },
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "L B R2 B' R2 U2 F D R2 U R2 F2 D2 R U B L2",
+                text = scramble,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
