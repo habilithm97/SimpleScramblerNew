@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,6 +81,9 @@ fun ScrambleScreen() {
     // Compose 상태로 관리되는 스크램블 문자열 (초기 안내 문구 포함)
     var scramble by remember { mutableStateOf("TAP TO GENERATE") }
 
+    var expanded by remember { mutableStateOf(false) } // 드롭다운 상태
+    var selectedEvent by remember { mutableStateOf("3x3x3") } // 현재 선택된 종목
+
     val faces = listOf("U", "R", "F", "B", "L", "D")
     val rotations = listOf("", "'", "2")
 
@@ -123,15 +129,38 @@ fun ScrambleScreen() {
             .background(Color.Black),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "3x3x3",
-            fontSize = 40.sp,
-            color = Color.White,
-            textAlign = TextAlign.Center,
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(top = 16.dp)
-        )
+                .wrapContentSize(Alignment.TopCenter) // 드롭다운 위치를 텍스트에 맞춤
+        ) {
+            Text(
+                text = selectedEvent,
+                fontSize = 40.sp,
+                color = Color.White,
+                modifier = Modifier
+                    .clickable { expanded = true } // 텍스트 클릭 시 드롭다운 열기
+            )
+            DropdownMenu(
+                expanded = expanded, // 드롭다운 표시 여부
+                onDismissRequest = { expanded = false } // 바깥 클릭 시 닫기
+            ) {
+                DropdownMenuItem(
+                    text = { Text("3x3x3") },
+                    onClick = {
+                        selectedEvent = "3x3x3"
+                        expanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("2x2x2") },
+                    onClick = {
+                        selectedEvent = "2x2x2"
+                        expanded = false
+                    }
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         Box(
@@ -139,9 +168,7 @@ fun ScrambleScreen() {
                 .fillMaxWidth()
                 .weight(1f) // 남은 공간 전부 사용
                 .padding(16.dp)
-                .clickable {
-                    scramble = createScramble() // 화면 터치 시 새로 생성
-                },
+                .clickable { scramble = createScramble() }, // 화면 터치 시 새로 생성
             contentAlignment = Alignment.Center
         ) {
             Text(
