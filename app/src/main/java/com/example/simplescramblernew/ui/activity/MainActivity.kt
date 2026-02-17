@@ -82,7 +82,7 @@ fun ScrambleScreen() {
     var scramble by remember { mutableStateOf("TAP TO GENERATE") }
 
     var expanded by remember { mutableStateOf(false) } // 드롭다운 상태
-    var selectedEvent by remember { mutableStateOf("3x3x3") } // 현재 선택된 종목
+    var selectedEvent by remember { mutableStateOf("3x3x3") }
 
     val faces = listOf("U", "R", "F", "B", "L", "D")
     val rotations = listOf("", "'", "2")
@@ -102,11 +102,17 @@ fun ScrambleScreen() {
         var lastFace = "" // 직전 면 저장 (연속 동일 면 방지 ex. U U2)
         var secondLastFace = "" // 두 번째 직전 면 저장 (같은 축 3연속 방지 ex. R L R)
 
-        repeat(20) {
+        val moves = if (selectedEvent == "3x3x3") 20 else 11
+        val facesToUse = if (selectedEvent == "3x3x3") {
+            faces
+        } else {
+            faces.subList(0, 3) // U R F
+        }
+        repeat(moves) {
             var face: String
 
             do {
-                face = faces.random()
+                face = facesToUse.random()
             } while (
                 face == lastFace || // 직전 면과 동일하거나
                 // 같은 축이 3연속이면 다시
@@ -150,6 +156,7 @@ fun ScrambleScreen() {
                     onClick = {
                         selectedEvent = "3x3x3"
                         expanded = false
+                        scramble = createScramble() // 종목 변경 시 생성
                     }
                 )
                 DropdownMenuItem(
@@ -157,6 +164,7 @@ fun ScrambleScreen() {
                     onClick = {
                         selectedEvent = "2x2x2"
                         expanded = false
+                        scramble = createScramble()
                     }
                 )
             }
