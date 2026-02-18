@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DropdownMenu
@@ -22,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -69,7 +72,7 @@ fun PagerScreen(modifier: Modifier = Modifier) {
         ) {
             when (page) {
                 0 -> ScrambleScreen()
-                1 -> Text("두 번째 페이지")
+                1 -> ListScreen()
                 2 -> Text("세 번째 페이지")
             }
         }
@@ -190,11 +193,49 @@ fun ScrambleScreen() {
     }
 }
 
+@Composable
+fun ListScreen() {
+
+    // 임시 데이터
+    val scrambleList = remember {
+        mutableStateListOf("F2 U' R2 F2 D2 R2 D2 U R2 U2 B L' U' B R' U' L' D2 B' D")
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            items(scrambleList) { scramble ->
+                Text(
+                    text = scramble,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
 // 미리보기
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     SimpleScramblerNewTheme {
-        PagerScreen()
+        //PagerScreen()
+        ListScreen()
     }
 }
+
+/**
+ * ViewPager -> HorizontalPager
+ * RecyclerView -> LazyColumn
+   -UI를 그리는 방식이라서 View를 재활용하지 않음
+   -대신 필요한 것만 재구성(Recomposition)
+ */
