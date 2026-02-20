@@ -24,7 +24,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,7 +35,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.simplescramblernew.ui.theme.SimpleScramblerNewTheme
+import com.example.simplescramblernew.viewmodel.ScrambleViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +60,8 @@ class MainActivity : ComponentActivity() {
 // 화면을 그리는 함수
 @Composable
 fun PagerScreen(modifier: Modifier = Modifier) {
+    val viewModel: ScrambleViewModel = viewModel()
+
     val pagerState = rememberPagerState( // 페이지 상태 저장
         pageCount = { 3 }
     )
@@ -71,8 +74,8 @@ fun PagerScreen(modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center // 가운데 정렬
         ) {
             when (page) {
-                0 -> ScrambleScreen()
-                1 -> ListScreen()
+                0 -> ScrambleScreen(viewModel)
+                1 -> ListScreen(viewModel)
                 2 -> Text("세 번째 페이지")
             }
         }
@@ -80,7 +83,7 @@ fun PagerScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ScrambleScreen() {
+fun ScrambleScreen(viewModel: ScrambleViewModel) {
     // Compose 상태로 관리되는 스크램블 문자열 (초기 안내 문구 포함)
     var scramble by remember { mutableStateOf("TAP TO GENERATE") }
 
@@ -132,6 +135,16 @@ fun ScrambleScreen() {
         return builder.toString()
     }
 
+    fun generateScramble() {
+
+        // 현재 값이 기본 문구가 아닐 때만 저장
+        if (scramble != "TAP TO GENERATE") {
+            viewModel.addScramble(scramble)
+        }
+        // 새 스크램블 생성
+        scramble = createScramble()
+    }
+
     Column( // 세로로 배치 (LinearLayout)
         modifier = Modifier
             .fillMaxSize()
@@ -159,7 +172,7 @@ fun ScrambleScreen() {
                     onClick = {
                         selectedEvent = "3x3x3"
                         expanded = false
-                        scramble = createScramble() // 종목 변경 시 생성
+                        generateScramble()
                     }
                 )
                 DropdownMenuItem(
@@ -167,7 +180,7 @@ fun ScrambleScreen() {
                     onClick = {
                         selectedEvent = "2x2x2"
                         expanded = false
-                        scramble = createScramble()
+                        generateScramble()
                     }
                 )
             }
@@ -179,7 +192,7 @@ fun ScrambleScreen() {
                 .fillMaxWidth()
                 .weight(1f) // 남은 공간 전부 사용
                 .padding(16.dp)
-                .clickable { scramble = createScramble() }, // 화면 터치 시 새로 생성
+                .clickable { generateScramble() },
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -194,12 +207,9 @@ fun ScrambleScreen() {
 }
 
 @Composable
-fun ListScreen() {
+fun ListScreen(viewModel: ScrambleViewModel) {
 
-    // 임시 데이터
-    val scrambleList = remember {
-        mutableStateListOf("F2 U' R2 F2 D2 R2 D2 U R2 U2 B L' U' B R' U' L' D2 B' D")
-    }
+    val scrambleList = viewModel.scrambleList
 
     Column(
         modifier = Modifier
@@ -229,13 +239,13 @@ fun ListScreen() {
 fun GreetingPreview() {
     SimpleScramblerNewTheme {
         //PagerScreen()
-        ListScreen()
+        //ListScreen()
     }
 }
 
 /**
  * ViewPager -> HorizontalPager
  * RecyclerView -> LazyColumn
-   -UI를 그리는 방식이라서 View를 재활용하지 않음
-   -대신 필요한 것만 재구성(Recomposition)
+-UI를 그리는 방식이라서 View를 재활용하지 않음
+-대신 필요한 것만 재구성(Recomposition)
  */
