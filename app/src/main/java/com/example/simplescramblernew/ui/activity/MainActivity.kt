@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() { // Compose 기반의 메인 액티비
 @Composable
 fun PagerScreen(modifier: Modifier = Modifier) {
     // Compose 생명주기에 맞는 ViewModel 인스턴스 (화면 간 상태 공유)
-    val viewModel: ScrambleViewModel = viewModel()
+    val scrambleViewModel: ScrambleViewModel = viewModel()
 
     // 현재 페이지 상태 기억
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -74,72 +74,18 @@ fun PagerScreen(modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center
         ) {
             when (page) {
-                0 -> ScrambleScreen(viewModel)
-                1 -> ListScreen(viewModel)
+                0 -> ScrambleScreen(scrambleViewModel)
+                1 -> ListScreen(scrambleViewModel)
             }
         }
     }
 }
 
 @Composable
-fun ScrambleScreen(viewModel: ScrambleViewModel) {
-    // Compose는 State가 바뀌면 UI 자동 갱신
-    var selectedEvent by remember { mutableStateOf("3x3x3") } // 선택된 종목 상태
+fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
+    val selectedEvent = scrambleViewModel.selectedEvent // 선택된 종목 상태
     var expanded by remember { mutableStateOf(false) } // 드롭다운 상태
-    var scramble by remember { mutableStateOf("TAP TO GENERATE") } // 스크램블 상태
-
-    val faces = listOf("U", "R", "F", "B", "L", "D")
-    val rotations = listOf("", "'", "2")
-
-    // 면이 속한 축 반환 (같은 축 3연속 방지용)
-    fun getAxis(face: String): String {
-        return when (face) {
-            "U", "D" -> "UD"
-            "L", "R" -> "LR"
-            "F", "B" -> "FB"
-            else -> ""
-        }
-    }
-
-    fun createScramble(): String {
-        val builder = StringBuilder()
-        var lastFace = "" // 직전 면
-        var secondLastFace = "" // 두 번째 직전 면
-
-        val moves = if (selectedEvent == "3x3x3") 20 else 11
-
-        val facesToUse = if (selectedEvent == "3x3x3") {
-            faces
-        } else {
-            faces.subList(0, 3) // U R F
-        }
-        repeat(moves) {
-            var face: String
-
-            do {
-                face = facesToUse.random()
-            } while (
-                face == lastFace || // 같은 면 연속 방지 (U U2)
-                (face == secondLastFace && getAxis(face) == getAxis(lastFace)) // 같은 축 3연속 방지 (R L R)
-            )
-            val rotation = rotations.random()
-
-            if (builder.isNotEmpty()) builder.append(" ") // 첫 번째 기호가 아니면 공백 추가
-            builder.append(face).append(rotation)
-
-            secondLastFace = lastFace
-            lastFace = face
-        }
-        return builder.toString()
-    }
-
-    fun generateScramble() {
-        // 현재 값이 기본 문구가 아닐 때만 추가
-        if (scramble != "TAP TO GENERATE") {
-            viewModel.addScramble(scramble)
-        }
-        scramble = createScramble()
-    }
+    val scramble = scrambleViewModel.scramble
 
     Column( // LinearLayout
         modifier = Modifier
@@ -166,17 +112,15 @@ fun ScrambleScreen(viewModel: ScrambleViewModel) {
                 DropdownMenuItem(
                     text = { Text("3x3x3") },
                     onClick = {
-                        selectedEvent = "3x3x3"
                         expanded = false
-                        generateScramble()
+                        scrambleViewModel.setEvent("3x3x3")
                     }
                 )
                 DropdownMenuItem(
                     text = { Text("2x2x2") },
                     onClick = {
-                        selectedEvent = "2x2x2"
                         expanded = false
-                        generateScramble()
+                        scrambleViewModel.setEvent("2x2x2")
                     }
                 )
             }
@@ -188,7 +132,7 @@ fun ScrambleScreen(viewModel: ScrambleViewModel) {
                 .fillMaxWidth()
                 .weight(1f) // 남은 공간 모두 차지
                 .padding(16.dp)
-                .clickable { generateScramble() },
+                .clickable { scrambleViewModel.generateScramble() },
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -203,9 +147,9 @@ fun ScrambleScreen(viewModel: ScrambleViewModel) {
 }
 
 @Composable
-fun ListScreen(viewModel: ScrambleViewModel) {
+fun ListScreen(scrambleViewModel: ScrambleViewModel) {
 
-    val scrambleList = viewModel.scrambleList
+    val scrambleList = scrambleViewModel.scrambleList
 
     Column(
         modifier = Modifier
