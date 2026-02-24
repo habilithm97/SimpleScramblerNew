@@ -1,13 +1,19 @@
 package com.example.simplescramblernew.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.simplescramblernew.data.ScrambleDataStore
+import kotlinx.coroutines.launch
 
 // ViewModel -> 화면/로직 분리, 상태 안전 유지
-class ScrambleViewModel : ViewModel() {
+class ScrambleViewModel(application: Application) : AndroidViewModel(application) {
+    private val context = getApplication<Application>()
+
     var selectedEvent by mutableStateOf("3x3x3")
         private set
     var scramble by mutableStateOf("TAP TO GENERATE")
@@ -35,6 +41,11 @@ class ScrambleViewModel : ViewModel() {
     fun generateScramble() {
         if (scramble != "TAP TO GENERATE") {
             scrambleList.add(scramble)
+
+            // 리스트 변경 후 저장
+            viewModelScope.launch {
+                ScrambleDataStore.save(context, scrambleList)
+            }
         }
         val builder = StringBuilder()
         var lastFace = "" // 직전 면
