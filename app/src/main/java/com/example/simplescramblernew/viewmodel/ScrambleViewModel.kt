@@ -16,10 +16,13 @@ class ScrambleViewModel(application: Application) : AndroidViewModel(application
 
     var selectedEvent by mutableStateOf("3x3x3")
         private set
+
     var scramble by mutableStateOf("TAP TO GENERATE")
         private set
+
     var scrambleList = mutableStateListOf<String>()
         private set
+
     val faces = listOf("U", "R", "F", "B", "L", "D")
     val rotations = listOf("", "'", "2")
 
@@ -31,6 +34,10 @@ class ScrambleViewModel(application: Application) : AndroidViewModel(application
             "F", "B" -> "FB"
             else -> ""
         }
+    }
+
+    init {
+        loadScrambles()
     }
 
     fun setEvent(event: String) {
@@ -76,5 +83,13 @@ class ScrambleViewModel(application: Application) : AndroidViewModel(application
             lastFace = face
         }
         scramble  = builder.toString()
+    }
+
+    private fun loadScrambles() {
+        viewModelScope.launch {
+            val savedList = ScrambleDataStore.load(context)
+            scrambleList.clear()
+            scrambleList.addAll(savedList)
+        }
     }
 }
