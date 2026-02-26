@@ -69,7 +69,7 @@ fun PagerScreen(modifier: Modifier = Modifier) {
         state = pagerState,
         modifier = modifier.fillMaxSize()
     ) { page ->
-        Box( // FrameLayout
+        Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
@@ -87,7 +87,7 @@ fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
     var expanded by remember { mutableStateOf(false) } // 드롭다운 상태
     val scramble = scrambleViewModel.scramble
 
-    Column( // LinearLayout
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
@@ -161,13 +161,15 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            items(scrambleList) { scramble ->
-                Text(
-                    text = scramble,
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            items(scrambleList.asReversed()) { scramble ->
+                Column {
+                    Text(
+                        text = scramble,
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -184,6 +186,8 @@ fun GreetingPreview() {
 }
 
 /**
+ * Column -> LinearLayout
+ * Box -> FrameLayout
  * ViewPager -> HorizontalPager
  * RecyclerView -> LazyColumn
   -UI를 그리는 방식이라 View를 재활용하지 않음
