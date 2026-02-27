@@ -20,6 +20,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -167,7 +168,13 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                         text = scramble,
                         color = Color.White,
                         fontSize = 18.sp,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    )
+                    HorizontalDivider( // 구분선
+                        thickness = 1.dp,
+                        color = Color.DarkGray
                     )
                 }
             }
