@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,14 +16,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -151,6 +154,7 @@ fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
 fun ListScreen(scrambleViewModel: ScrambleViewModel) {
 
     val scrambleList = scrambleViewModel.scrambleList
+    var selectedScramble by remember { mutableStateOf<Int?>(null) } // 삭제 대상 index
 
     Column(
         modifier = Modifier
@@ -160,10 +164,20 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(32.dp)
         ) {
-            items(scrambleList.asReversed()) { scramble ->
-                Column {
+            itemsIndexed(scrambleList.asReversed()) { reversedIndex, scramble -> // 최신순 정렬
+                val realIndex = scrambleList.lastIndex - reversedIndex // 원본 index 계산
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .combinedClickable(
+                            onClick = {},
+                            // 롱클릭 시 해당 스크램블의 원본 index를 저장
+                            onLongClick = { selectedScramble = realIndex }
+                        )
+                ) {
                     Text(
                         text = scramble,
                         color = Color.White,
@@ -179,6 +193,26 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                 }
             }
         }
+    }
+    selectedScramble?.let { scramble ->
+        AlertDialog(
+            onDismissRequest = { selectedScramble = null }, // 바깥 클릭 시 선택 해제
+            title = { Text("삭제 확인") },
+            text = { Text("이 스크램블을 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scrambleViewModel.deleteScramble(scramble)
+                        selectedScramble = null // 삭제 후 상태 초기화
+                    }
+                ) { Text("삭제") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { selectedScramble = null } // 취소 시 상태 초기화
+                ) { Text("취소") }
+            }
+        )
     }
 }
 
@@ -197,6 +231,6 @@ fun GreetingPreview() {
  * Box -> FrameLayout
  * ViewPager -> HorizontalPager
  * RecyclerView -> LazyColumn
-  -UI를 그리는 방식이라 View를 재활용하지 않음
-  -대신 필요한 것만 재구성(Recomposition)
+-UI를 그리는 방식이라 View를 재활용하지 않음
+-대신 필요한 것만 재구성(Recomposition)
  */
