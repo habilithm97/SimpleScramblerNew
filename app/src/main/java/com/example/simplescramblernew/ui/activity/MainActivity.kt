@@ -7,10 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,12 +24,15 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -156,6 +157,7 @@ fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(scrambleViewModel: ScrambleViewModel) {
 
@@ -168,38 +170,46 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 8.dp
-                ),
-            horizontalArrangement = Arrangement.End // 내부 요소 우측 정렬
-        ) {
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "메뉴",
-                        tint = Color.White
-                    )
+        TopAppBar( // 상단 앱바 (TopAppBar)
+            title = {
+                Text(
+                    text = "사용한 스크램블 목록",
+                    color = Color.White
+                )
+            },
+            actions = { // 액션 영역
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "메뉴",
+                            tint = Color.White
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("전체 삭제") },
+                            onClick = { menuExpanded = false }
+                        )
+                    }
                 }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("전체 삭제") },
-                        onClick = { menuExpanded = false }
-                    )
-                }
-            }
-        }
+            },
+            // TopAppBar 색상 설정 (Material3 전용)
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Black
+            )
+        )
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp)
+                .padding(
+                    start = 24.dp,
+                    end = 24.dp,
+                    bottom = 32.dp
+                )
         ) {
             itemsIndexed(scrambleList.asReversed()) { reversedIndex, scramble -> // 최신순 정렬
                 val realIndex = scrambleList.lastIndex - reversedIndex // 원본 index 계산
