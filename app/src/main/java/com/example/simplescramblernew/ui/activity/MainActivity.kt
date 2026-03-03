@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -157,6 +158,7 @@ fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
     }
 }
 
+// Material3 TopAppBar 사용을 위한 Experimental API opt-in
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(scrambleViewModel: ScrambleViewModel) {
@@ -165,50 +167,74 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
     var selectedScramble by remember { mutableStateOf<Int?>(null) } // 삭제 대상 index
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        TopAppBar( // 상단 앱바 (TopAppBar)
-            title = {
-                Text(
-                    text = "사용한 스크램블 목록",
-                    color = Color.White
-                )
-            },
-            actions = { // 액션 영역
-                Box {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "메뉴",
-                            tint = Color.White
-                        )
+    selectedScramble?.let { scramble ->
+        AlertDialog(
+            onDismissRequest = { selectedScramble = null }, // 바깥 클릭 시 선택 해제
+            title = { Text("삭제 확인") },
+            text = { Text("이 스크램블을 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scrambleViewModel.deleteScramble(scramble)
+                        selectedScramble = null // 삭제 후 상태 초기화
                     }
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("전체 삭제") },
-                            onClick = { menuExpanded = false }
-                        )
-                    }
-                }
+                ) { Text("삭제") }
             },
-            // TopAppBar 색상 설정 (Material3 전용)
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Black
-            )
+            dismissButton = {
+                TextButton(
+                    onClick = { selectedScramble = null } // 취소 시 상태 초기화
+                ) { Text("취소") }
+            }
         )
+    }
+
+    // Material3 기본 화면 구조 (TopBar + Content(LazyColumn))
+    Scaffold(
+        containerColor = Color.Black,
+        topBar = {
+            TopAppBar( // 상단 앱바 (Material3 TopAppBar)
+                windowInsets = WindowInsets(0), // 상태바 inset 제거
+                title = {
+                    Text(
+                        text = "사용한 스크램블 목록",
+                        color = Color.White
+                    )
+                },
+                actions = { // 액션 영역
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "메뉴",
+                                tint = Color.White
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("전체 삭제") },
+                                onClick = { menuExpanded = false }
+                            )
+                        }
+                    }
+                },
+                // TopAppBar 색상 설정 (Material3 전용)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black
+                )
+            )
+        }
+    ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .padding(
                     start = 24.dp,
                     end = 24.dp,
-                    bottom = 32.dp
+                    bottom = 24.dp
                 )
         ) {
             itemsIndexed(scrambleList.asReversed()) { reversedIndex, scramble -> // 최신순 정렬
@@ -238,26 +264,6 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                 }
             }
         }
-    }
-    selectedScramble?.let { scramble ->
-        AlertDialog(
-            onDismissRequest = { selectedScramble = null }, // 바깥 클릭 시 선택 해제
-            title = { Text("삭제 확인") },
-            text = { Text("이 스크램블을 삭제하시겠습니까?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        scrambleViewModel.deleteScramble(scramble)
-                        selectedScramble = null // 삭제 후 상태 초기화
-                    }
-                ) { Text("삭제") }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { selectedScramble = null } // 취소 시 상태 초기화
-                ) { Text("취소") }
-            }
-        )
     }
 }
 
