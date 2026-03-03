@@ -100,4 +100,12 @@ class ScrambleViewModel(application: Application) : AndroidViewModel(application
             ScrambleDataStore.save(context, scrambleList)
         }
     }
+
+    fun deleteAllScrambles() {
+        scrambleList.clear()
+
+        viewModelScope.launch {
+            ScrambleDataStore.save(context, scrambleList)
+        }
+    }
 }

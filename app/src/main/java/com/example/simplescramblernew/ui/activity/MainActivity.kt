@@ -166,6 +166,7 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
     val scrambleList = scrambleViewModel.scrambleList
     var selectedScramble by remember { mutableStateOf<Int?>(null) } // 삭제 대상 index
     var menuExpanded by remember { mutableStateOf(false) }
+    var showDeleteAllDialog by remember { mutableStateOf(false) }
 
     selectedScramble?.let { scramble ->
         AlertDialog(
@@ -183,6 +184,26 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
             dismissButton = {
                 TextButton(
                     onClick = { selectedScramble = null } // 취소 시 상태 초기화
+                ) { Text("취소") }
+            }
+        )
+    }
+    if (showDeleteAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAllDialog = false },
+            title = { Text("전체 삭제") },
+            text = { Text("모든 스크램블을 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scrambleViewModel.deleteAllScrambles()
+                        showDeleteAllDialog = false
+                    }
+                ) { Text("삭제") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteAllDialog = false }
                 ) { Text("취소") }
             }
         )
@@ -215,7 +236,10 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                         ) {
                             DropdownMenuItem(
                                 text = { Text("전체 삭제") },
-                                onClick = { menuExpanded = false }
+                                onClick = {
+                                    menuExpanded = false
+                                    showDeleteAllDialog = true
+                                }
                             )
                         }
                     }
