@@ -9,15 +9,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -50,16 +46,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.simplescramblernew.ui.theme.SimpleScramblerNewTheme
 import com.example.simplescramblernew.viewmodel.ScrambleViewModel
+import androidx.compose.foundation.lazy.items
 
-class MainActivity : ComponentActivity() { // Compose 기반의 메인 액티비티
+class MainActivity : ComponentActivity() { // Jetpack Compose 기반
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge() // 시스템 바까지 화면 확장
         setContent { // Compose UI
-            SimpleScramblerNewTheme { // 테마
-                Scaffold( // 기본 레이아웃 (Material 구조체)
+            SimpleScramblerNewTheme {
+                Scaffold( // 화면 레이아웃 기본 틀
                     modifier = Modifier.fillMaxSize()
-                ) { innerPadding -> // 시스템 UI 영역을 고려한 패딩 값 제공
+                ) { innerPadding ->
                     PagerScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -74,16 +71,18 @@ fun PagerScreen(modifier: Modifier = Modifier) {
     // Compose 생명주기에 맞는 ViewModel 인스턴스 (화면 간 상태 공유)
     val scrambleViewModel: ScrambleViewModel = viewModel()
 
-    // 현재 페이지 상태 기억
+    // 2페이지 Pager 상태 기억
     val pagerState = rememberPagerState(pageCount = { 2 })
 
-    HorizontalPager(
+    HorizontalPager( // Compose용 ViewPager 역할
         state = pagerState,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black),
     ) { page ->
-        Box(
+        Box( // Compose용 FrameLayout 역할
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center // 내용 중앙 정렬
         ) {
             when (page) {
                 0 -> ScrambleScreen(scrambleViewModel)
@@ -95,51 +94,40 @@ fun PagerScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
-    val selectedEvent = scrambleViewModel.selectedEvent // 선택된 종목 상태
-    var expanded by remember { mutableStateOf(false) } // 드롭다운 상태
-    val scramble = scrambleViewModel.scramble
+    val uiState = scrambleViewModel.uiState.value
+    val selectedEvent = uiState.selectedEvent
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+    val events = listOf("3x3x3", "2x2x2")
+    val scramble = uiState.scramble
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Column( // Compose용 LinearLayout 역할
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally // 가로 중앙 정렬
     ) {
-        Box(
-            modifier = Modifier
-                .padding(top = 16.dp)
-                // 내용 크기만큼만 차지, 상단 중앙 정렬
-                .wrapContentSize(Alignment.TopCenter)
-        ) {
+        Box( // 종목 선택 영역
+            modifier = Modifier.padding(top = 16.dp)) {
             Text(
                 text = selectedEvent,
                 fontSize = 40.sp,
                 color = Color.White,
-                modifier = Modifier.clickable { expanded = true }
+                modifier = Modifier.clickable { isDropdownExpanded = true }
             )
             DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false } // 바깥 클릭 시 메뉴 닫기
+                expanded = isDropdownExpanded,
+                onDismissRequest = { isDropdownExpanded = false }
             ) {
-                DropdownMenuItem(
-                    text = { Text("3x3x3") },
-                    onClick = {
-                        expanded = false
-                        scrambleViewModel.setEvent("3x3x3")
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("2x2x2") },
-                    onClick = {
-                        expanded = false
-                        scrambleViewModel.setEvent("2x2x2")
-                    }
-                )
+                events.forEach { event ->
+                    DropdownMenuItem(
+                        text = { Text(event) },
+                        onClick = {
+                            isDropdownExpanded = false
+                            scrambleViewModel.setEvent(event)
+                        }
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp)) // 세로 여백
-
-        Box(
+        Box( // 스크램블 표시 영역
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f) // 남은 공간 모두 차지
@@ -148,7 +136,7 @@ fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = scramble,
+                text = scramble ?: "TAP TO GENERATE",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -162,28 +150,29 @@ fun ScrambleScreen(scrambleViewModel: ScrambleViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(scrambleViewModel: ScrambleViewModel) {
-
-    val scrambleList = scrambleViewModel.scrambleList
-    var selectedScramble by remember { mutableStateOf<Int?>(null) } // 삭제 대상 index
-    var menuExpanded by remember { mutableStateOf(false) }
+    var selectedScramble by remember { mutableStateOf<String?>(null) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    val uiState = scrambleViewModel.uiState.value
+    val scrambleList = uiState.scrambleList
 
     selectedScramble?.let { scramble ->
         AlertDialog(
-            onDismissRequest = { selectedScramble = null }, // 바깥 클릭 시 선택 해제
+            onDismissRequest = { selectedScramble = null },
             title = { Text("삭제 확인") },
             text = { Text("이 스크램블을 삭제하시겠습니까?") },
             confirmButton = {
                 TextButton(
                     onClick = {
                         scrambleViewModel.deleteScramble(scramble)
-                        selectedScramble = null // 삭제 후 상태 초기화
+                        selectedScramble = null
                     }
                 ) { Text("삭제") }
             },
             dismissButton = {
                 TextButton(
-                    onClick = { selectedScramble = null } // 취소 시 상태 초기화
+                    onClick = { selectedScramble = null }
                 ) { Text("취소") }
             }
         )
@@ -208,12 +197,10 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
             }
         )
     }
-
-    // Material3 기본 화면 구조 (TopBar + Content(LazyColumn))
     Scaffold(
         containerColor = Color.Black,
         topBar = {
-            TopAppBar( // 상단 앱바 (Material3 TopAppBar)
+            TopAppBar(
                 windowInsets = WindowInsets(0), // 상태바 inset 제거
                 title = {
                     Text(
@@ -221,8 +208,8 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                         color = Color.White
                     )
                 },
-                actions = { // 액션 영역
-                    Box {
+                actions = {
+                    Box { // 우측 더보기 메뉴 영역
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
@@ -244,33 +231,32 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                         }
                     }
                 },
-                // TopAppBar 색상 설정 (Material3 전용)
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Black
                 )
             )
         }
     ) { innerPadding ->
+        // Scaffold Content
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding) // TopAppBar 밑에서 스크램블 리스트 시작
                 .padding(
                     start = 24.dp,
                     end = 24.dp,
                     bottom = 24.dp
                 )
         ) {
-            itemsIndexed(scrambleList.asReversed()) { reversedIndex, scramble -> // 최신순 정렬
-                val realIndex = scrambleList.lastIndex - reversedIndex // 원본 index 계산
+            // 스크램블 리스트 역순 정렬, key는 scramble 문자열 사용
+            items(scrambleList.asReversed(), key = { it } ) { scramble ->
 
-                Column(
+                Column( // Compose용 리스트 아이템
                     modifier = Modifier
                         .fillMaxWidth()
                         .combinedClickable(
                             onClick = {},
-                            // 롱클릭 시 해당 스크램블의 원본 index를 저장
-                            onLongClick = { selectedScramble = realIndex }
+                            onLongClick = { selectedScramble = scramble }
                         )
                 ) {
                     Text(
@@ -296,15 +282,10 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
 @Composable
 fun GreetingPreview() {
     SimpleScramblerNewTheme {
-        //PagerScreen()
-        //ListScreen()
     }
 }
 
 /**
- * Column -> LinearLayout
- * Box -> FrameLayout
- * ViewPager -> HorizontalPager
  * RecyclerView -> LazyColumn
 -UI를 그리는 방식이라 View를 재활용하지 않음
 -대신 필요한 것만 재구성(Recomposition)

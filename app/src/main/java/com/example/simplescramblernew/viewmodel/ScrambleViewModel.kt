@@ -1,33 +1,27 @@
 package com.example.simplescramblernew.viewmodel
 
 import android.app.Application
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.simplescramblernew.data.ScrambleDataStore
+import com.example.simplescramblernew.data.ScrambleUiState
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.State
 
-// ViewModel -> 화면/로직 분리, 상태 안전 유지
+// UI와 로직 분리를 위한 ViewModel
 class ScrambleViewModel(application: Application) : AndroidViewModel(application) {
     private val context = getApplication<Application>()
 
-    var selectedEvent by mutableStateOf("3x3x3")
-        private set
+    // 상태를 외부(UI)에서 수정하지 못하도록 캡슐화
+    private val _uiState = mutableStateOf(ScrambleUiState())
+    val uiState: State<ScrambleUiState> = _uiState
 
-    var scramble by mutableStateOf("TAP TO GENERATE")
-        private set
-
-    var scrambleList = mutableStateListOf<String>()
-        private set
-
-    val faces = listOf("U", "R", "F", "B", "L", "D")
-    val rotations = listOf("", "'", "2")
+    private val faces = listOf("U", "R", "F", "B", "L", "D")
+    private val rotations = listOf("", "'", "2")
 
     // 면이 속한 축 반환 (같은 축 3연속 방지용)
-    fun getAxis(face: String): String {
+    private fun getAxis(face: String): String {
         return when (face) {
             "U", "D" -> "UD"
             "L", "R" -> "LR"
@@ -41,30 +35,32 @@ class ScrambleViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setEvent(event: String) {
-        selectedEvent = event
+        _uiState.value = _uiState.value.copy(selectedEvent = event)
         generateScramble()
     }
 
     fun generateScramble() {
-        if (scramble != "TAP TO GENERATE") {
-            scrambleList.add(scramble)
+        val currentState = _uiState.value // 현재 UI 상태
 
-            // 리스트 변경 후 저장
-            viewModelScope.launch {
-                ScrambleDataStore.save(context, scrambleList)
-            }
+        // 이전 스크램블 저장
+        if (currentState.scramble != null) {
+            val updatedList = currentState.scrambleList + currentState.scramble
+            updateScrambleList(updatedList)
         }
+        // 새 스크램블 생성
+        val newScramble = buildScramble(currentState.selectedEvent)
+        _uiState.value = _uiState.value.copy(scramble = newScramble)
+    }
+
+    private fun buildScramble(event: String) : String {
         val builder = StringBuilder()
         var lastFace = "" // 직전 면
         var secondLastFace = "" // 두 번째 직전 면
 
-        val moves = if (selectedEvent == "3x3x3") 20 else 11
+        val moves = if (event == "3x3x3") 20 else 11
 
-        val facesToUse = if (selectedEvent == "3x3x3") {
-            faces
-        } else {
-            faces.subList(0, 3) // U R F
-        }
+        val facesToUse = if (event == "3x3x3") faces else faces.take(3) // U R F
+
         repeat(moves) {
             var face: String
 
@@ -82,30 +78,28 @@ class ScrambleViewModel(application: Application) : AndroidViewModel(application
             secondLastFace = lastFace
             lastFace = face
         }
-        scramble  = builder.toString()
+        return builder.toString()
+    }
+
+    private fun updateScrambleList(newList: List<String>) {
+        _uiState.value = _uiState.value.copy(scrambleList = newList)
+        // 스크램블 리스트를 DataStore에 비동기로 저장
+        viewModelScope.launch { ScrambleDataStore.save(context, newList) }
     }
 
     private fun loadScrambles() {
         viewModelScope.launch {
             val savedList = ScrambleDataStore.load(context)
-            scrambleList.clear()
-            scrambleList.addAll(savedList)
+            _uiState.value = _uiState.value.copy(scrambleList = savedList)
         }
     }
 
-    fun deleteScramble(index: Int) {
-        scrambleList.removeAt(index)
-
-        viewModelScope.launch {
-            ScrambleDataStore.save(context, scrambleList)
-        }
+    fun deleteScramble(scramble: String) {
+        val updatedList = _uiState.value.scrambleList - scramble
+        updateScrambleList(updatedList)
     }
 
     fun deleteAllScrambles() {
-        scrambleList.clear()
-
-        viewModelScope.launch {
-            ScrambleDataStore.save(context, scrambleList)
-        }
+        updateScrambleList(emptyList())
     }
 }
