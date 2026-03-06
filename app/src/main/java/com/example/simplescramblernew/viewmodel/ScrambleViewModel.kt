@@ -58,7 +58,6 @@ class ScrambleViewModel(application: Application) : AndroidViewModel(application
         var secondLastFace = "" // 두 번째 직전 면
 
         val moves = if (event == "3x3x3") 20 else 11
-
         val facesToUse = if (event == "3x3x3") faces else faces.take(3) // U R F
 
         repeat(moves) {

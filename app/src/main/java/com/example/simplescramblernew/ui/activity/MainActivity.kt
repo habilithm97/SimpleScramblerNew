@@ -47,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.simplescramblernew.ui.theme.SimpleScramblerNewTheme
 import com.example.simplescramblernew.viewmodel.ScrambleViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 
 class MainActivity : ComponentActivity() { // Jetpack Compose 기반
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,9 +58,7 @@ class MainActivity : ComponentActivity() { // Jetpack Compose 기반
                 Scaffold( // 화면 레이아웃 기본 틀
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
-                    PagerScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    PagerScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -248,10 +247,11 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                     bottom = 24.dp
                 )
         ) {
-            // 스크램블 리스트 역순 정렬, key는 scramble 문자열 사용
-            items(scrambleList.asReversed(), key = { it } ) { scramble ->
+            // 스크램블 리스트 역순 정렬
+            itemsIndexed(scrambleList.asReversed(), key = { _, it -> it }) { index, scramble ->
+                val number = scrambleList.size - index // 역순 정렬에 맞는 번호 계산
 
-                Column( // Compose용 리스트 아이템
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .combinedClickable(
@@ -260,7 +260,7 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
                         )
                 ) {
                     Text(
-                        text = scramble,
+                        text = "$number. $scramble",
                         color = Color.White,
                         fontSize = 18.sp,
                         modifier = Modifier
@@ -280,10 +280,7 @@ fun ListScreen(scrambleViewModel: ScrambleViewModel) {
 // 미리보기 화면
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    SimpleScramblerNewTheme {
-    }
-}
+fun GreetingPreview() { SimpleScramblerNewTheme {} }
 
 /**
  * RecyclerView -> LazyColumn
