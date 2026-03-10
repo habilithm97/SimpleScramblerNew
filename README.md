@@ -53,9 +53,7 @@ private fun buildScramble(event: String) : String {
 <br>
 
 ### 👉 스크램블 히스토리 저장
-- 스크램블을 리스트에 추가
-- DataStore와 Gson을 사용하여 JSON 형태로 저장
-- 앱 재실행 후에도 기록 유지
+- DataStore를 사용해 생성된 스크램블을 로컬에 저장
 ```kotlin
 private val Context.dataStore by preferencesDataStore(name = "scramble")
 
@@ -78,3 +76,61 @@ object ScrambleDataStore {
         return gson.fromJson(json, object : TypeToken<List<String>>() {}.type)
     }
 }
+```
+
+<br>
+
+### 👉 스크램블 히스토리 관리
+- 생성된 스크램블을 목록으로 확인
+- 개별 삭제 및 전체 삭제 기능 지원
+```kotlin
+Scaffold(
+    topBar = {
+        TopAppBar(
+            title = { Text("사용한 스크램블 목록") },
+            actions = {
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "메뉴"
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("전체 삭제") },
+                            onClick = {
+                                menuExpanded = false
+                                showDeleteAllDialog = true
+                            }
+                        )
+                    }
+                }
+            }
+        )
+    }
+) { innerPadding ->
+    LazyColumn(
+        modifier = Modifier
+            .padding(innerPadding)
+    ) {
+        itemsIndexed(scrambleList.asReversed(), key = { _, it -> it }) { index, scramble ->
+            val number = scrambleList.size - index // 역순 정렬에 맞는 번호 계산
+
+            Column(
+                modifier = Modifier
+                    .combinedClickable(
+                        onClick = {},
+                        onLongClick = { selectedScramble = scramble }
+                    )
+            ) {
+                Text(text = "$number. $scramble")
+                HorizontalDivider()
+            }
+        }
+    }
+}
+```
