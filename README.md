@@ -14,7 +14,6 @@
 - Kotlin Coroutines
 - Android DataStore
 - Compose Pager
-
 ## ✅ 주요 기능 (Snippet)
 ### 👉 스크램블 생성 ( WCA(세계큐브협회) 규칙 기반 )
 - 3x3x3 / 2x2x2 지원
@@ -133,4 +132,16 @@ Scaffold(
         }
     }
 }
+```
+## 📂 프로젝트 구조
+```text
+app
+ ┣ data
+ ┃ ┗ ScrambleDataStore.kt
+ ┣ ui
+ ┃ ┗ activity
+ ┃    ┗ MainActivity.kt
+ ┣ viewmodel
+ ┃ ┣ ScrambleViewModel.kt
+ ┃ ┗ ScrambleUiState.kt
 ```
