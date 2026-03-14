@@ -8,12 +8,10 @@
 ## 🛠️ 기술 스택
 - Kotlin
 - Jetpack Compose
-- Compose State (mutableStateOf)
-- MVVM Architecture
-- Android ViewModel
+- MVVM
+- ViewModel
 - Kotlin Coroutines
-- Android DataStore
-- Compose Pager
+- DataStore
 ## ✅ 주요 기능 (Snippet)
 ### 👉 스크램블 생성 ( WCA(세계큐브협회) 규칙 기반 )
 - 3x3x3 / 2x2x2 지원
