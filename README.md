@@ -7,8 +7,8 @@
 
 ## 🛠️ 기술 스택
 - Kotlin
-- Jetpack Compose
 - MVVM
+- Jetpack Compose
 - ViewModel
 - Kotlin Coroutines
 - DataStore
