@@ -50,7 +50,7 @@ private fun buildScramble(event: String) : String {
 <br>
 
 ### 👉 스크램블 히스토리 저장
-- DataStore를 사용해 생성된 스크램블을 로컬에 저장
+- 생성된 스크램블을 DataStore를 사용해 로컬에 저장
 ```kotlin
 private val Context.dataStore by preferencesDataStore(name = "scramble")
 
